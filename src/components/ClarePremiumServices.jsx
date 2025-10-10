@@ -343,23 +343,27 @@ const handleRegister = async (e) => {
       />
 
       {/* Sticky Logo */}
-      <a
-        href="#top"
-        className="fixed left-4 sm:left-6 top-4 sm:top-6 z-50 inline-flex items-center gap-3"
-        onClick={(e) => {
-          e.preventDefault();
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        }}
-      >
-        <img
-          src={logoUrl}
-          alt="Clare Senior Care Logo"
-          className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl object-cover ring-1 ring-white/15 shadow"
-        />
-        <span className="hidden sm:block text-white/90 font-medium tracking-wide">
-          Clare Premium
-        </span>
-      </a>
+<a
+  href="#top"
+  className="fixed left-4 sm:left-6 top-4 sm:top-6 z-50 inline-flex items-center gap-2 sm:gap-3 no-underline"
+  onClick={(e) => {
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }}
+  aria-label="Back to top"
+>
+  <img
+    src={logoUrl}
+    alt="Clare Senior Care Logo"
+    className="h-5 w-5 sm:h-6 sm:w-6 rounded-md object-contain ring-1 ring-white/10"
+    loading="eager"
+    decoding="async"
+  />
+  <span className="hidden sm:block text-xs sm:text-sm tracking-[0.25em] uppercase text-[#d4af37]">
+    Clare Premium
+  </span>
+</a>
+
 
       {/* Mobile hamburger (top-right) */}
 <button

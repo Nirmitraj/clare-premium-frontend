@@ -3,14 +3,13 @@
 
 /* Optional: frosted capsule wrapper to match your UI */
 .gt-chip {
-  /* You can also do this in JSX with Tailwind classes; this is for convenience */
   display: inline-flex;
   align-items: center;
   box-shadow: 0 10px 40px -12px rgba(0,0,0,0.5);
 }
 
-/* Global, not module-scoped! */
-#google_translate_element .goog-te-gadget {
+/* ✅ Apply to both IDs: homepage + member page */
+:is(#google_translate_element, #google_translate_element_member) .goog-te-gadget {
   display: inline-flex !important;
   align-items: center !important;
   gap: 8px !important;
@@ -18,7 +17,8 @@
 }
 
 /* Keep the Google branding visible */
-#google_translate_element .goog-te-gadget .goog-logo-link {
+:is(#google_translate_element, #google_translate_element_member) 
+  .goog-te-gadget .goog-logo-link {
   display: inline-flex !important;
   align-items: center !important;
   line-height: 1 !important;
@@ -28,7 +28,8 @@
 }
 
 /* The select itself — compact + responsive */
-#google_translate_element .goog-te-gadget .goog-te-combo {
+:is(#google_translate_element, #google_translate_element_member) 
+  .goog-te-gadget .goog-te-combo {
   appearance: none !important;
   -webkit-appearance: none !important;
   -moz-appearance: none !important;
@@ -53,36 +54,41 @@
   background-size: auto, 12px 8px !important;
 }
 
-#google_translate_element .goog-te-gadget .goog-te-combo:hover {
+:is(#google_translate_element, #google_translate_element_member) 
+  .goog-te-gadget .goog-te-combo:hover {
   background: rgba(255,255,255,0.14) !important;
   border-color: rgba(255,255,255,0.3) !important;
 }
 
-#google_translate_element .goog-te-gadget .goog-te-combo:focus {
+:is(#google_translate_element, #google_translate_element_member) 
+  .goog-te-gadget .goog-te-combo:focus {
   box-shadow: 0 0 0 2px rgba(255,255,255,0.15) !important;
   border-color: rgba(255,255,255,0.35) !important;
 }
 
 /* --- Responsive tweaks --- */
 
-/* Small screens: even slimmer so it fits on one line with CTAs */
+/* Small screens */
 @media (max-width: 640px) {
-  #google_translate_element .goog-te-gadget .goog-te-combo {
+  :is(#google_translate_element, #google_translate_element_member) 
+    .goog-te-gadget .goog-te-combo {
     height: 28px !important;
     font-size: 12px !important;
     padding: 3px 18px 3px 8px !important;
     width: 100px !important;
     max-width: 120px !important;
   }
-  #google_translate_element .goog-te-gadget .goog-logo-link {
+  :is(#google_translate_element, #google_translate_element_member) 
+    .goog-te-gadget .goog-logo-link {
     font-size: 9px !important;
     opacity: 0.85 !important;
   }
 }
 
-/* Large screens: allow a bit more width for longer names like "Vietnamese" */
+/* Large screens */
 @media (min-width: 1024px) {
-  #google_translate_element .goog-te-gadget .goog-te-combo {
+  :is(#google_translate_element, #google_translate_element_member) 
+    .goog-te-gadget .goog-te-combo {
     width: 140px !important;
   }
 }

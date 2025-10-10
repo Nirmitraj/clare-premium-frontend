@@ -1,0 +1,569 @@
+// /src/components/business/RentalHubModal.jsx
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { X } from "lucide-react";
+
+const AMENITIES = [
+  "Swimming pool",
+  "WiFi",
+  "24 hour check in",
+  "Family friendly games",
+  "Dishwasher",
+  "Custom stocked fridge",
+  "Fireplace",
+  "Toiletries",
+  "Outdoor experiences like: biking, kayaking etc.",
+  "Other",
+];
+
+const PROPERTY_TYPES = [
+  "Vacation home or condo",
+  "Resort points",
+  "Fixed week",
+  "Floating week",
+  "Other",
+];
+
+export default function RentalHubModal({
+  open,
+  onClose,
+  onSubmit,
+  title = "Rental Hub",
+  subtitle = "List or rent units with concierge support",
+  imageUrl = "/media/rental-hub.png",
+  info = [
+    "Tell us about the property, dates, and amenities.",
+    "We’ll verify eligibility on Sabio’s platform.",
+    "You’ll receive next steps after submitting.",
+  ],
+}) {
+  const [form, setForm] = useState({
+    propertyLocation: "",
+    propertyName: "",
+    unitDescription: "",
+
+    bathrooms: "",
+    bathroomsOther: "",
+
+    occupancy: 1,
+
+    amenities: [],
+    amenitiesOther: "",
+
+    checkIn: "",
+    checkOut: "",
+
+    propertyTypes: [],
+    propertyTypesOther: "",
+
+    ownerName: "",
+    mobilePhone: "",
+    homePhone: "",
+    businessPhone: "",
+    email: "",
+
+    specialRequests: "",
+    acceptTerms: false, // mandatory
+  });
+
+  const [submitting, setSubmitting] = useState(false);
+  const [done, setDone] = useState(false);
+  const [error, setError] = useState("");
+
+  const valid =
+    form.propertyLocation.trim() &&
+    form.checkIn &&
+    form.checkOut &&
+    new Date(form.checkOut) > new Date(form.checkIn) &&
+    Number(form.occupancy) >= 1 &&
+    form.bathrooms &&
+    form.propertyTypes.length > 0 &&
+    form.acceptTerms === true;
+
+  const toggleIn = (k, v) => () =>
+    setForm((f) => {
+      const s = new Set(f[k]);
+      s.has(v) ? s.delete(v) : s.add(v);
+      return { ...f, [k]: Array.from(s) };
+    });
+
+  const update = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+  const updateNum = (k, min = 0) => (e) =>
+    setForm((f) => ({ ...f, [k]: Math.max(min, parseInt(e.target.value || "0", 10)) }));
+
+  useEffect(() => {
+    if (form.checkIn && form.checkOut && form.checkOut <= form.checkIn) {
+      setForm((f) => ({ ...f, checkOut: "" }));
+    }
+  }, [form.checkIn]); // eslint-disable-line
+
+  // portal root
+  const modalRoot = useMemo(() => {
+    let el = document.getElementById("modal-root");
+    if (!el) { el = document.createElement("div"); el.id = "modal-root"; document.body.appendChild(el); }
+    return el;
+  }, []);
+  const overlayRef = useRef(null);
+
+  useEffect(() => {
+    const onKey = (e) => open && e.key === "Escape" && onClose?.();
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  useEffect(() => {
+    if (open) { const prev = document.body.style.overflow; document.body.style.overflow = "hidden"; return () => (document.body.style.overflow = prev); }
+  }, [open]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    if (!valid) return;
+    setSubmitting(true);
+    try {
+      const payload = {
+        propertyLocation: form.propertyLocation.trim(),
+        propertyName: form.propertyName.trim(),
+        unitDescription: form.unitDescription.trim(),
+
+        bathroomsOption: form.bathrooms,
+        bathroomsOther: form.bathrooms === "Other" ? form.bathroomsOther : "",
+
+        occupancy: Number(form.occupancy),
+
+        amenities: form.amenities,
+        amenitiesOther: form.amenities.includes("Other") ? form.amenitiesOther : "",
+
+        checkIn: form.checkIn,
+        checkOut: form.checkOut,
+
+        propertyTypes: form.propertyTypes,
+        propertyTypesOther: form.propertyTypes.includes("Other") ? form.propertyTypesOther : "",
+
+        ownerName: form.ownerName.trim(),
+        mobilePhone: form.mobilePhone.trim(),
+        homePhone: form.homePhone.trim(),
+        businessPhone: form.businessPhone.trim(),
+        email: form.email.trim(),
+
+        specialRequests: (form.specialRequests || "").slice(0, 1000),
+
+        acceptTerms: form.acceptTerms === true,
+      };
+
+      await onSubmit?.(payload);
+      setDone(true);
+    } catch (err) {
+      setError(err?.message || "Could not submit your request.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (!open) return null;
+
+  return createPortal(
+    <div
+      ref={overlayRef}
+      className="fixed inset-0 z-[100] flex items-center justify-center"
+      aria-modal="true"
+      role="dialog"
+      onMouseDown={(e) => e.target === overlayRef.current && !submitting && onClose?.()}
+    >
+      {/* gold theme */}
+      <style>{`
+        @keyframes shimmer { 0%{background-position:0% center} 100%{background-position:200% center} }
+        .animate-shimmer { animation: shimmer 3s linear infinite; }
+        .gold-card {
+          background:
+            radial-gradient(1200px 400px at -10% -10%, rgba(212,175,55,0.12), transparent 40%),
+            radial-gradient(800px 600px at 110% -10%, rgba(255,230,128,0.08), transparent 40%),
+            linear-gradient(180deg, rgba(14,12,10,0.9) 0%, rgba(14,12,10,0.96) 100%);
+        }
+        .shine-bar {
+          position: absolute; top: 0; left: -30%; width: 30%; height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255,243,176,0.18), transparent);
+          filter: blur(8px); animation: sweep 5s ease-in-out infinite; pointer-events: none;
+        }
+        @keyframes sweep { 0%{transform:translateX(0)} 50%{transform:translateX(380%)} 100%{transform:translateX(380%)} }
+      `}</style>
+
+      <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" />
+      <div className="relative z-[101] w-screen h-screen md:w-[92vw] md:h-auto md:max-h-[90vh] p-[1.5px] rounded-none md:rounded-2xl bg-gradient-to-br from-[#8a6b2e] via-[#d4af37] to-[#8a6b2e] shadow-[0_20px_80px_-20px_rgba(0,0,0,0.65),0_0_60px_-12px_rgba(212,175,55,0.35)] overflow-hidden">
+        <div className="shine-bar" />
+        <div className="relative gold-card h-full rounded-none md:rounded-2xl">
+          {/* Close */}
+          <div className="sticky top-0 z-[2] flex justify-end p-3 md:p-0 md:block md:static">
+            <button
+              onClick={onClose}
+              disabled={submitting}
+              className="inline-flex items-center justify-center rounded-lg p-2 md:absolute md:right-3 md:top-3 hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#d4af37]/70 disabled:opacity-60"
+              aria-label="Close"
+            >
+              <X className="w-5 h-5 text-[#ffe9a6]" />
+            </button>
+          </div>
+
+          {/* Two-pane */}
+          <div className="grid grid-cols-1 md:grid-cols-2">
+            {/* Left hero */}
+            <div className="relative h-[36vh] md:h-auto">
+              <div className="absolute inset-0">
+                <img src={imageUrl} alt="Rental Hub" className="h-full w-full object-cover opacity-70" />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/55 to-black/80" />
+                <div className="absolute -bottom-24 left-1/2 -translate-x-1/2 w-[140%] h-48 blur-2xl bg-[radial-gradient(ellipse_at_center,rgba(212,175,55,0.25),transparent_60%)] pointer-events-none" />
+              </div>
+              <div className="relative px-5 sm:px-8 md:px-10 pb-6 md:pb-10">
+                <div className="text-[#e9cd76] text-[11px] md:text-xs uppercase tracking-[0.25em] mb-2 p-3">
+                  Clare Premium
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-semibold text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)]">
+                  {title}
+                </h2>
+                <p className="text-white/85 mt-1 md:mt-2 text-sm md:text-base">{subtitle}</p>
+                <ul className="hidden md:mt-6 md:space-y-2 md:text-white/85 md:text-sm md:block">
+                  {info.map((line, i) => (
+                    <li key={i} className="flex gap-2">
+                      <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#d4af37]" />
+                      <span>{line}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="hidden md:block mt-6 text-xs text-white/70">
+                  Tell us your preferences — we’ll handle the details.
+                </div>
+              </div>
+            </div>
+
+            {/* Right: form / success */}
+            <div className="p-5 sm:p-6 md:p-7 overflow-y-auto max-h-[54vh] md:max-h-[90vh]">
+              {done ? (
+                <div className="text-center py-10">
+                  <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-gradient-to-r from-[#d4af37] via-[#ffe08a] to-[#d4af37] shadow-[0_0_32px_rgba(212,175,55,0.45)]" />
+                  <h3 className="text-xl font-semibold text-white">Thank you!</h3>
+                  <p className="text-white/80 mt-1">Your rental hub enquiry has been submitted. We’ll be in touch soon.</p>
+                  <button
+                    onClick={onClose}
+                    className="mt-6 rounded-lg px-5 py-2 text-sm font-semibold text-black bg-gradient-to-r from-[#d4af37] via-[#ffe08a] to-[#d4af37] bg-[length:200%_auto] animate-shimmer hover:brightness-110"
+                  >
+                    Close
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4">
+                  {error && (
+                    <div className="rounded-lg border border-red-500/30 bg-red-500/10 text-red-200 px-3 py-2 text-sm">
+                      {error}
+                    </div>
+                  )}
+
+                  {/* Property basics */}
+                  <div>
+                    <label className="block text-sm text-white/85 mb-1">
+                      Property Location<span className="text-[#ffd369]">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="City / State / Country"
+                      className="w-full rounded-lg bg-white/5 border border-[#b69333]/30 px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[#ffd369]/60"
+                      value={form.propertyLocation}
+                      onChange={update("propertyLocation")}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-white/85 mb-1">Property Name</label>
+                    <input
+                      type="text"
+                      placeholder="e.g., Villa Fontaine"
+                      className="w-full rounded-lg bg-white/5 border border-[#b69333]/30 px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[#ffd369]/60"
+                      value={form.propertyName}
+                      onChange={update("propertyName")}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-white/85 mb-1">Unit Description</label>
+                    <input
+                      type="text"
+                      placeholder="one bedroom, 2 bedroom, 3 bedroom, etc."
+                      className="w-full rounded-lg bg-white/5 border border-[#b69333]/30 px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[#ffd369]/60"
+                      value={form.unitDescription}
+                      onChange={update("unitDescription")}
+                    />
+                  </div>
+
+                  {/* Bathrooms */}
+                  <div>
+                    <label className="block text-sm text-white/85 mb-1">
+                      Bathrooms<span className="text-[#ffd369]">*</span>
+                    </label>
+                    <div className="grid grid-cols-4 gap-2 text-sm text-white">
+                      {["1", "2", "3", "Other"].map((opt) => (
+                        <label
+                          key={opt}
+                          className={`flex items-center gap-2 rounded-lg border px-3 py-2 cursor-pointer transition ${
+                            form.bathrooms === opt
+                              ? "border-[#d4af37] bg-[#d4af37]/10"
+                              : "border-[#b69333]/30 bg-white/5 hover:bg-white/10"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="bathrooms"
+                            className="accent-[#d4af37]"
+                            checked={form.bathrooms === opt}
+                            onChange={() => setForm((f) => ({ ...f, bathrooms: opt }))}
+                          />
+                          {opt}
+                        </label>
+                      ))}
+                    </div>
+                    {form.bathrooms === "Other" && (
+                      <input
+                        type="text"
+                        placeholder="Number of bathrooms"
+                        className="mt-2 w-full rounded-lg bg-white/5 border border-[#b69333]/30 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#ffd369]/60"
+                        value={form.bathroomsOther}
+                        onChange={update("bathroomsOther")}
+                      />
+                    )}
+                  </div>
+
+                  {/* Occupancy */}
+                  <div>
+                    <label className="block text-sm text-white/85 mb-1">
+                      Occupancy<span className="text-[#ffd369]">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      className="w-full rounded-lg bg-white/5 border border-[#b69333]/30 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#ffd369]/60"
+                      value={form.occupancy}
+                      onChange={updateNum("occupancy", 1)}
+                      required
+                    />
+                  </div>
+
+                  {/* Amenities */}
+                  <div>
+                    <label className="block text-sm text-white/85 mb-2">Property Amenities (select any)</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-white">
+                      {AMENITIES.map((opt) => (
+                        <label
+                          key={opt}
+                          className={`flex items-center gap-2 rounded-lg border px-3 py-2 cursor-pointer transition ${
+                            form.amenities.includes(opt)
+                              ? "border-[#d4af37] bg-[#d4af37]/10"
+                              : "border-[#b69333]/30 bg-white/5 hover:bg-white/10"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            className="accent-[#d4af37]"
+                            checked={form.amenities.includes(opt)}
+                            onChange={toggleIn("amenities", opt)}
+                          />
+                          {opt}
+                        </label>
+                      ))}
+                    </div>
+                    {form.amenities.includes("Other") && (
+                      <input
+                        type="text"
+                        placeholder="Tell us about other amenities"
+                        className="mt-2 w-full rounded-lg bg-white/5 border border-[#b69333]/30 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#ffd369]/60"
+                        value={form.amenitiesOther}
+                        onChange={update("amenitiesOther")}
+                      />
+                    )}
+                  </div>
+
+                  {/* Dates */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm text-white/85 mb-1">
+                        Check In<span className="text-[#ffd369]">*</span>
+                      </label>
+                      <input
+                        type="date"
+                        className="w-full rounded-lg bg-white/5 border border-[#b69333]/30 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#ffd369]/60"
+                        value={form.checkIn}
+                        onChange={update("checkIn")}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-white/85 mb-1">
+                        Check Out<span className="text-[#ffd369]">*</span>
+                      </label>
+                      <input
+                        type="date"
+                        className="w-full rounded-lg bg-white/5 border border-[#b69333]/30 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#ffd369]/60"
+                        value={form.checkOut}
+                        onChange={update("checkOut")}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Property type */}
+                  <div>
+                    <label className="block text-sm text-white/85 mb-2">
+                      Select Property Type<span className="text-[#ffd369]">*</span>
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-white">
+                      {PROPERTY_TYPES.map((opt) => (
+                        <label
+                          key={opt}
+                          className={`flex items-center gap-2 rounded-lg border px-3 py-2 cursor-pointer transition ${
+                            form.propertyTypes.includes(opt)
+                              ? "border-[#d4af37] bg-[#d4af37]/10"
+                              : "border-[#b69333]/30 bg-white/5 hover:bg-white/10"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            className="accent-[#d4af37]"
+                            checked={form.propertyTypes.includes(opt)}
+                            onChange={toggleIn("propertyTypes", opt)}
+                          />
+                          {opt}
+                        </label>
+                      ))}
+                    </div>
+                    {form.propertyTypes.includes("Other") && (
+                      <input
+                        type="text"
+                        placeholder="Tell us more"
+                        className="mt-2 w-full rounded-lg bg-white/5 border border-[#b69333]/30 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#ffd369]/60"
+                        value={form.propertyTypesOther}
+                        onChange={update("propertyTypesOther")}
+                      />
+                    )}
+                  </div>
+
+                  {/* Owner & contact */}
+                  <div>
+                    <label className="block text-sm text-white/85 mb-1">Owner’s Name</label>
+                    <input
+                      type="text"
+                      placeholder="First Name - Last Name"
+                      className="w-full rounded-lg bg-white/5 border border-[#b69333]/30 px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[#ffd369]/60"
+                      value={form.ownerName}
+                      onChange={update("ownerName")}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm text-white/85 mb-1">Mobile</label>
+                      <input
+                        type="text"
+                        placeholder="Area Code + Phone Number"
+                        className="w-full rounded-lg bg-white/5 border border-[#b69333]/30 px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[#ffd369]/60"
+                        value={form.mobilePhone}
+                        onChange={update("mobilePhone")}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-white/85 mb-1">Home</label>
+                      <input
+                        type="text"
+                        placeholder="Area Code + Phone Number"
+                        className="w-full rounded-lg bg-white/5 border border-[#b69333]/30 px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[#ffd369]/60"
+                        value={form.homePhone}
+                        onChange={update("homePhone")}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm text-white/85 mb-1">Business</label>
+                      <input
+                        type="text"
+                        placeholder="Area Code + Phone Number"
+                        className="w-full rounded-lg bg-white/5 border border-[#b69333]/30 px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[#ffd369]/60"
+                        value={form.businessPhone}
+                        onChange={update("businessPhone")}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-white/85 mb-1">Email</label>
+                      <input
+                        type="email"
+                        placeholder="name@email.com"
+                        className="w-full rounded-lg bg-white/5 border border-[#b69333]/30 px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[#ffd369]/60"
+                        value={form.email}
+                        onChange={update("email")}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Special Requests */}
+                  <div>
+                    <label className="block text-sm text-white/85 mb-1">Special Requests (max 1000 chars)</label>
+                    <textarea
+                      maxLength={1000}
+                      placeholder="Notes about eligibility, seasons, property details, etc."
+                      className="w-full min-h-[96px] rounded-lg bg-white/5 border border-[#b69333]/30 px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[#ffd369]/60"
+                      value={form.specialRequests}
+                      onChange={update("specialRequests")}
+                    />
+                    <div className="text-right text-xs text-white/60">{form.specialRequests.length}/1000</div>
+                  </div>
+
+                  {/* Accept terms */}
+                  <div className="rounded-lg border border-[#b69333]/30 p-3 text-sm text-white/85 bg-white/5">
+                    <label className="flex items-start gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="mt-1 accent-[#d4af37]"
+                        checked={form.acceptTerms}
+                        onChange={(e) => setForm((f) => ({ ...f, acceptTerms: !!e.target.checked }))}
+                      />
+                      <span>
+                        Please read and accept the following information. Your property must qualify for rental in the Sabio Platform.
+                        The main factors that determine if your property qualifies for rental through the Sabio Platform are the supply
+                        and demand of your property (size of unit, season, location, quality of the property, and early request). You will
+                        receive further instructions after this inquiry.{" "}
+                        <b>(Required)</b>
+                      </span>
+                    </label>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-end gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      className="rounded-lg border border-[#b69333]/30 px-4 py-2 text-sm text-white hover:bg-white/10"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={!valid || submitting}
+                      className={[
+                        "relative overflow-hidden rounded-lg px-5 py-2 text-sm font-semibold",
+                        "shadow-[0_0_32px_rgba(212,175,55,0.45)]",
+                        valid && !submitting
+                          ? "text-black bg-gradient-to-r from-[#d4af37] via-[#ffe08a] to-[#d4af37] bg-[length:200%_auto] animate-shimmer hover:brightness-110"
+                          : "bg-white/10 text-white/60 cursor-not-allowed",
+                      ].join(" ")}
+                    >
+                      {submitting ? "Submitting..." : "Enquire Now"}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>,
+    modalRoot
+  );
+}
