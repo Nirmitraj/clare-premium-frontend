@@ -497,7 +497,7 @@ const handleRegister = async (e) => {
 
 
   <a
-    href="https://api.leadconnectorhq.com/widget/booking/NNLFt1ygevMh8Xe2Bm0A"
+    href="https://clareseniorcare.com/home-health-service-private-pay/"
     target="_blank"
     className="inline-flex items-center justify-center rounded-xl px-6 py-3 text-base font-medium text-white bg-white/10 hover:bg-white/20 border border-white/20 transition-colors"
   >
@@ -687,13 +687,13 @@ const handleRegister = async (e) => {
               <Button type="submit" className="rounded-xl" disabled={authLoading}>
                 {authLoading ? "Signing in..." : "Sign in"}
               </Button>
-              <Button
+              {/* <Button
                 type="button"
                 onClick={() => setShowRegister(true)}
                 className="rounded-xl px-3 py-3 text-base border border-white/20 bg-white/10 hover:bg-white/20"
               >
                 Create account
-              </Button>
+              </Button> */}
             </div>
 
           </form>

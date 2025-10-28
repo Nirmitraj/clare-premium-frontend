@@ -92,3 +92,19 @@
     width: 140px !important;
   }
 }
+
+/* Hide Google Translate overlay tooltip/balloon + top banner */
+#goog-gt-tt,
+.goog-te-balloon-frame,
+.goog-te-banner-frame.skiptranslate {
+  display: none !important;
+}
+
+/* Prevent layout shift when Google sets body { top: 0 } for the banner */
+body { top: 0 !important; }
+
+/* Remove the yellow highlight Google adds on translated text */
+.goog-text-highlight {
+  background: transparent !important;
+  box-shadow: none !important;
+}

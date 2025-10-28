@@ -76,52 +76,14 @@ export default function FaqModal({ open, onOpenChange, inductionUrl }) {
 
           <AccordionItem value="q2">
             <AccordionTrigger>How can I become a Clare Premium member?</AccordionTrigger>
-            <AccordionContent>
-              There are two ways to become a member:
-              <ol className="list-decimal ml-6 mt-3 space-y-2">
-                <li>
-                  Receive an <strong>invitation</strong> from a Clare Premium Board Member or a Clare Co-founder.
-                </li>
-                <li>
-                  Join through one of our <strong>Premier Partners</strong> (e.g., select private communities or
-                  physician/hospitality groups) that may <strong>sponsor</strong> their clients for membership.
-                </li>
-              </ol>
-              Clare does not sell memberships to the general public.
+            <AccordionContent> Click on Join Now Button on the Home Page
             </AccordionContent>
           </AccordionItem>
 
           <AccordionItem value="q3">
             <AccordionTrigger>What are the annual dues for membership?</AccordionTrigger>
             <AccordionContent>
-              The annual membership fee is <strong>$499 USD</strong>. Some partner communities may underwrite this fee.
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="q4">
-            <AccordionTrigger>
-              How long does it take to activate my membership after my partner community enrollment?
-            </AccordionTrigger>
-            <AccordionContent>
-              Activation typically takes up to <strong>30 days</strong> after your partner community confirms your eligibility.
-              You’ll then receive a Welcome email and Login details from Clare Premium Services.
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="q5">
-            <AccordionTrigger>Can I arrange an induction to review benefits and member obligations?</AccordionTrigger>
-            <AccordionContent>
-              Absolutely. You can book a one-on-one induction with a Member-Services specialist to review benefits,
-              scope, and privacy standards. Please note that Clare should already have received your membership
-              information from the sponsoring partner.
-              <div className="mt-4">
-                <Button
-                  onClick={() => window.open(url, "_blank", "noopener,noreferrer")}
-                  className="rounded-xl"
-                >
-                  Book Induction
-                </Button>
-              </div>
+              Exclusive Member Only Benefit is available free to all Privately Paid Clients
             </AccordionContent>
           </AccordionItem>
         </Accordion>
